@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default Deny All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Helper Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isDeviceOwner(deviceId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/devices/$(deviceId)) &&
+        get(/databases/$(database)/documents/devices/$(deviceId)).data.ownerId == request.auth.uid;
+    }
+
+    // Devices Collection
+    match /devices/{deviceId} {
+      allow get: if isSignedIn() && isValidId(deviceId);
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn() && isValidId(deviceId) &&
+        incoming().ownerId == request.auth.uid &&
+        incoming().deviceId == deviceId &&
+        incoming().deviceId is string && incoming().deviceId.size() <= 128;
+
+      allow update: if isSignedIn() && isValidId(deviceId) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId;
+
+      allow delete: if isSignedIn() && isValidId(deviceId) &&
+        existing().ownerId == request.auth.uid;
+
+      // Telemetry History Subcollection (Chronological AC & DC Samples)
+      match /history/{sampleId} {
+        allow get: if isSignedIn() && isValidId(deviceId) && isValidId(sampleId);
+        allow list: if isSignedIn() && isValidId(deviceId);
+
+        allow create: if isSignedIn() && isValidId(deviceId) && isValidId(sampleId) &&
+          incoming().deviceId == deviceId &&
+          incoming().timestamp is number;
+
+        // Historical telemetry samples are immutable records
+        allow update, delete: if false;
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "TelemetrySample": {
+      "title": "TelemetrySample",
+      "description": "Timestamped telemetry sample containing separate AC and DC solar metrics from ESP32",
+      "type": "object",
+      "properties": {
+        "timestamp": { "type": "number", "description": "Measurement epoch ms" },
+        "deviceId": { "type": "string", "maxLength": 128 },
+        "ac_voltage_v": { "type": "number" },
+        "ac_current_a": { "type": "number" },
+        "ac_active_power_w": { "type": "number" },
+        "ac_energy_kwh": { "type": "number" },
+        "ac_frequency_hz": { "type": "number" },
+        "ac_power_factor": { "type": "number" },
+        "solar_voltage_v": { "type": "number" },
+        "solar_current_a": { "type": "number" },
+        "solar_power_w": { "type": "number" },
+        "solar_energy_wh": { "type": "number" },
+        "battery_voltage_v": { "type": "number" },
+        "battery_current_a": { "type": "number" },
+        "battery_power_w": { "type": "number" },
+        "battery_soc_percent": { "type": "number" },
+        "battery_remaining_ah": { "type": "number" },
+        "dc_load_voltage_v": { "type": "number" },
+        "dc_load_current_a": { "type": "number" },
+        "dc_load_power_w": { "type": "number" },
+        "dc_load_energy_wh": { "type": "number" }
+      },
+      "required": ["timestamp", "deviceId"]
+    },
+    "Device": {
+      "title": "Device",
+      "description": "Solar energy system ESP32 controller node metadata and settings",
+      "type": "object",
+      "properties": {
+        "deviceId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "solar_panel_watts": { "type": "number" },
+        "battery_capacity_ah": { "type": "number" },
+        "inverter_rated_watts": { "type": "number" },
+        "lastSeen": { "type": "number" },
+        "ac_control_status": { "type": "string", "enum": ["closed", "open", "tripped", "unknown"] }
+      },
+      "required": ["deviceId", "ownerId"]
+    }
+  },
+  "firestore": {
+    "/devices/{deviceId}": {
+      "schema": { "$ref": "#/entities/Device" },
+      "description": "Solar monitor device configurations and metadata"
+    },
+    "/devices/{deviceId}/history/{sampleId}": {
+      "schema": { "$ref": "#/entities/TelemetrySample" },
+      "description": "Chronological timestamped AC and DC telemetry samples"
+    }
+  }
+}

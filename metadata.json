@@ -1,0 +1,6 @@
+{
+  "name": "Solar Monitor Pro",
+  "description": "Professional solar energy telemetry dashboard and control interface for ESP32 systems with INA228 DC sensors and PZEM-004T AC power monitors.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
